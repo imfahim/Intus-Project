@@ -1,0 +1,173 @@
+﻿@page "/subElements/{WindowId:int}"
+@page "/subElements"
+@using IntusProject.Shared
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject StateService.StateContainerService stateService;
+@implements IDisposable
+@inject NavigationManager uriHelper;
+<PageTitle>SubElement List</PageTitle>
+
+<div class="container">
+    <!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Modal Header</h4>
+      </div>
+      <div class="modal-body">
+        <p>Some text in the modal.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+    <PageTitle>SubElement List</PageTitle>
+    @if (subElements == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        if (WindowId == 0 || WindowId == null)
+        {
+            <h2>All SubElements</h2>
+        }
+        else
+        {
+            <h2>SubElements List for Order Id: @WindowId</h2>
+        }
+        <div>
+    <input type="button" data-toggle="modal" data-target="#taskModal" class="btn btn-primary" value="Add Task" @onclick="(() => InitializeModalobject())" />
+</div>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>SubElement Id</th>
+                    <th>Element</th>
+                    <th>Type</th>
+                    <th>Width</th>
+                    <th>Height</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var subElement in subElements)
+                {
+                    <tr>
+                        <td>@subElement.Id</td>
+                        <td>@subElement.Element</td>
+                        <td>@subElement.Type</td>
+                        <td>@subElement.Width</td>
+                        <td>@subElement.Height</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Open Modal</button>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="subElementDetailModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Task Detail</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@SubElementObject" OnValidSubmit="@HandleValidSubmit">
+                    <input type="hidden" @bind-value="@SubElementObject.Id" />
+                    <div class="form-group">
+                        <label for="Element">Element</label>
+                        <InputNumber id="Element" class="form-control" @bind-Value="@SubElementObject.Element" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Type">Type</label>
+                        <InputText id="Type" class="form-control" @bind-Value="@SubElementObject.Type" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Width">Width</label>
+                        <InputNumber id="Width" class="form-control" @bind-Value="@SubElementObject.Width" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Height">Height</label>
+                        <InputNumber id="Height" class="form-control" @bind-Value="@SubElementObject.Height" />
+                    </div>
+                    <!--<div class="form-group">
+                        <label for="status">Status</label>
+                        <InputSelect id="Summary" class="form-control"
+                                     @bind-Value="TaskObject.Status">
+                            <option value="">Select</option>
+                            @foreach (var status in TaskStatusList)
+                            {
+                                <option value="@status">
+                                    @status
+                                </option>
+                            }
+                        </InputSelect>
+                    </div>-->
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public int? WindowId { get; set; } = 0;
+    public SubElement SubElementObject { get; set; } = new SubElement();
+
+    private List<SubElement> subElements;
+    private string currentPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentPage = NavigationManager.Uri;
+        var stateData = stateService.GetValue(currentPage);
+        if (stateData == null)
+        {
+            if (WindowId != 0 && WindowId != null)
+            {
+                var response = await Http.GetFromJsonAsync<List<SubElement>>($"SubElement/window/{WindowId}");
+                subElements = response == null ? new List<SubElement>() : response;
+            }
+            else
+            {
+                var response = await Http.GetFromJsonAsync<List<SubElement>>($"SubElement");
+                subElements = response == null ? new List<SubElement>() : response;
+            }
+            stateService.SetValue(currentPage, subElements);
+            stateService.OnStateChange += StateHasChanged;
+        }
+        else
+        {
+            subElements = (List<SubElement>)stateData;
+        }
+    }
+
+    public void Dispose()
+    {
+        stateService.OnStateChange -= StateHasChanged;
+
+    }
+    private async void HandleValidSubmit()
+    {
+
+    }
+    private async Task InitializeModalobject()
+    {
+        SubElementObject = new SubElement();
+    }
+}

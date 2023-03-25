@@ -1,0 +1,51 @@
+﻿@page "/fetchdata"
+@using IntusProject.Shared
+@using IntusProject.Client
+@inject HttpClient Http
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (subElements == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Width</th>
+                <th>Height</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var subElement in subElements)
+            {
+                <tr>
+                    <td>@subElement.Id</td>
+                    <td>@subElement.Element</td>
+                    <td>@subElement.Type</td>
+                    <td>@subElement.Width</td>
+                    <td>@subElement.Height</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<SubElement> subElements;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetFromJsonAsync<List<SubElement>>("WeatherForecast");
+        subElements = response == null ? new List<SubElement>() : response;
+    }
+}

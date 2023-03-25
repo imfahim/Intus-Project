@@ -1,0 +1,102 @@
+﻿@page "/windows/{OrderId:int}"
+@page "/windows"
+@using IntusProject.Shared
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject StateService.StateContainerService stateService;
+@implements IDisposable
+@inject NavigationManager uriHelper;
+<PageTitle>Window List</PageTitle>
+
+<div class="container">
+    <PageTitle>Window List</PageTitle>
+    @if (windows == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        if (OrderId == 0 || OrderId == null)
+        {
+            <h2>All Windows</h2>
+        }
+        else
+        {
+            <h2>Windows List for Order Id: @OrderId</h2>
+        }
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Window Id</th>
+                    <th>Name</th>
+                    <th>QuantityOfWindows</th>
+                    <th>TotalSubElements</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var win in windows)
+                {
+                    <tr>
+                        <td>@win.Id</td>
+                        <td>@win.Name</td>
+                        <td>@win.QuantityOfWindows</td>
+                        <td>@win.TotalSubElements</td>
+                        <td>
+                            <input type="button" @onclick="@(()=>SelectedWindow(win.Id))" value="Sub Elements" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+
+</div>
+
+
+@code {
+    [Parameter]
+    public int? OrderId { get; set; } = 0;
+
+    private List<Window> windows;
+    private const string subElementPage = "subElements";
+    private string currentPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        currentPage = NavigationManager.Uri;
+        var stateData = stateService.GetValue(currentPage);
+        if (stateData == null)
+        {
+            if (OrderId != 0 && OrderId != null)
+            {
+                var response = await Http.GetFromJsonAsync<List<Window>>($"window/order/{OrderId}");
+                windows = response == null ? new List<Window>() : response;
+            }
+            else
+            {
+                var response = await Http.GetFromJsonAsync<List<Window>>($"window");
+                windows = response == null ? new List<Window>() : response;
+            }
+            stateService.SetValue(currentPage, windows);
+            stateService.OnStateChange += StateHasChanged;
+        }
+        else
+        {
+            windows = (List<Window>)stateData;
+        }
+    }
+
+    void SelectedWindow(int windowId)
+    {
+        //stateService.SetValue(subElementPage, windowId);
+        uriHelper.NavigateTo($"/{subElementPage}/{windowId}");
+    }
+
+    public void Dispose()
+    {
+        stateService.OnStateChange -= StateHasChanged;
+
+    }
+}

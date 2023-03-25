@@ -1,0 +1,75 @@
+﻿@page "/orders"
+@inject NavigationManager NavigationManager
+@using IntusProject.Shared
+@inject HttpClient Http
+@inject StateService.StateContainerService stateService;
+@implements IDisposable
+@inject NavigationManager uriHelper;
+<PageTitle>Order List</PageTitle>
+
+<div class="container">
+    <PageTitle>Order List</PageTitle>
+    @if (orders == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Order Id</th>
+                    <th>Name</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in orders)
+                {
+                    <tr>
+                        <td>@order.Id</td>
+                        <td>@order.Name</td>
+                        <td>@order.State</td>
+                        <td>
+                            <input type="button" @onclick="@(()=>SelectedOrder(order.Id))" value="Windows" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Order> orders;
+    private const string windowPage = "windows";
+    private string currentPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentPage = NavigationManager.Uri;
+        var stateData = stateService.GetValue(currentPage);
+        if(stateData == null)
+        {
+            var response = await Http.GetFromJsonAsync<List<Order>>("Order");
+            orders = response == null ? new List<Order>() : response;
+            stateService.SetValue(currentPage, orders);
+            stateService.OnStateChange += StateHasChanged;
+        }
+        else
+        {
+            orders = (List<Order>)stateData;
+        }
+    }
+
+    void SelectedOrder(int orderId)
+    {
+        uriHelper.NavigateTo($"/{windowPage}/{orderId}");
+    }
+    public void Dispose()
+    {
+        stateService.OnStateChange -= StateHasChanged;
+    }
+    //@attribute [Microsoft.AspNetCore.Components.RouteAttribute(PageName)]
+
+}
