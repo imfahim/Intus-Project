@@ -1,7 +1,7 @@
 # Intus Project
 
 This is a Demo Project to show case .Net Platform skill. 
-Here .Net 6 along with Blazor is used, with practices includes State Management, Layered Architecture, BLL, DAL Projects, DTO, Validation, Navigation etc.
+Here .Net 6 along with Blazor is used, with practices includes State Management, Layered Architecture, BLL, DAL Projects, DTO, Validation, Async Programming, Navigation, Dependency Injection etc.
 
 **Server Side:**  .Net 6 Web API with Entity Framework Code First Approach
 
@@ -53,6 +53,10 @@ We can Click on the **Window** Button. It will take to the Window Page for that 
 A new Order can be created by clicking the **Add Order** button
 
 ![image](https://user-images.githubusercontent.com/8882310/227757922-d0940e5d-604b-4f86-93a0-c242523cfdf6.png)
+
+The input view model has Validation implemented
+
+![image](https://user-images.githubusercontent.com/8882310/227758919-4982f733-36fa-4cc1-82e7-c6b7ece0a273.png)
 
 After submitting the Modal Form we will see the newly added Order in the List.
 
