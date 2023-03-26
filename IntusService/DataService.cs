@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using IntusRepository;
+using IntusRepository.Entity;
 using IntusService.ServiceModel;
 
 namespace IntusService
@@ -20,6 +21,20 @@ namespace IntusService
             var data = await _repo.GetAllSubElements();
             if (data == null) return new List<SubElementDTO>();
             return _mapper.Map<List<SubElementDTO>>(data);
+        }
+        public async Task SaveSubElementsState(IList<SubElementDTO> postData, int windowId)
+        {
+            var newAdded = postData.Where(x => x.Id == 0).ToList();
+            var allSubElements = await GetSubElementsByWindowId(windowId);
+            var deleted = allSubElements.Where(x => !postData.Select(x => x.Id).Contains(x.Id)).ToList();
+
+            foreach (var sub in newAdded) {
+                await _repo.AddSubElements(_mapper.Map<SubElement>(sub));
+            }
+            foreach (var sub in deleted)
+            {
+                await _repo.DeleteSubElements(sub.Id);
+            }
         }
         public async Task<List<WindowDTO>> GetAllWindows()
         {

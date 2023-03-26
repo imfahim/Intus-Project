@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using IntusProject.Shared;
 using IntusService;
+using IntusService.ServiceModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IntusProject.Server.Controllers
@@ -25,7 +26,13 @@ namespace IntusProject.Server.Controllers
             var data = await _dataService.GetAllSubElements();
             return _mapper.Map<List<SubElement>>(data);
         }
-
+        [Route("window/{windowId}")]
+        [HttpPost]
+        public async Task SaveState([FromBody]IList<SubElement> postData, int windowId)
+        {
+            await _dataService.SaveSubElementsState(_mapper.Map<List<SubElementDTO>>(postData), windowId);
+            //return _mapper.Map<List<SubElement>>(data);
+        }
         [Route("{subElementId}")]
         [HttpGet]
         public async Task<SubElement> GetSubElementById(int subElementId)

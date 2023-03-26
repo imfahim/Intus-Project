@@ -9,8 +9,11 @@ namespace IntusProject.Server.Mapping
         public SharedModelProfile()
         {
             CreateMap<SubElementDTO, SubElement>();
+            CreateMap<SubElement, SubElementDTO>();
             CreateMap<OrderDTO, Order>();
+            CreateMap<Order, OrderDTO>();
             CreateMap<WindowDTO, Window>();
+            CreateMap<Window, WindowDTO>();
         }
     }
 }

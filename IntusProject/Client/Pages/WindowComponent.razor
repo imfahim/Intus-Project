@@ -40,7 +40,7 @@
                         <td>@win.Id</td>
                         <td>@win.Name</td>
                         <td>@win.QuantityOfWindows</td>
-                        <td>@win.TotalSubElements</td>
+                        <td>@win.SubElements.Count</td>
                         <td>
                             <input type="button" @onclick="@(()=>SelectedWindow(win.Id))" value="Sub Elements" />
                         </td>

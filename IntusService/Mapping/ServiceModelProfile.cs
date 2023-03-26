@@ -9,8 +9,11 @@ namespace IntusService.Mapping
         public ServiceModelProfile()
         {
             CreateMap<SubElement, SubElementDTO>();
+            CreateMap<SubElementDTO, SubElement>();
             CreateMap<Window, WindowDTO>();
+            CreateMap<WindowDTO, Window>();
             CreateMap<Order, OrderDTO>();
+            CreateMap<OrderDTO, Order>();
         }
     }
 }
