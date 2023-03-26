@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using IntusProject.Shared;
 using IntusService;
+using IntusService.ServiceModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IntusProject.Server.Controllers
@@ -27,7 +28,12 @@ namespace IntusProject.Server.Controllers
             var data = await _dataService.GetAllOrders();
             return _mapper.Map<List<Order>>(data);
         }
-
+        [Route("")]
+        [HttpPost]
+        public async Task SaveState([FromBody] IList<Order> postData, int orderId)
+        {
+            await _dataService.SaveOrdersState(_mapper.Map<List<OrderDTO>>(postData), orderId);
+        }
         [Route("{orderId}")]
         [HttpGet]
         public async Task<Order> GetOrderById(int orderId)

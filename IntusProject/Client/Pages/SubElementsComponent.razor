@@ -6,15 +6,12 @@
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
 @inject StateService.PageHistoryState PageHistoryState;
+@inject Navigation Navigation
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>SubElement List</PageTitle>
 
 <div class="container">
-    @if (PageHistoryState.CanGoBack())
-    {
-        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
-    }
     <PageTitle>SubElement List</PageTitle>
     @if (subElements == null)
     {
@@ -22,6 +19,7 @@
     }
     else
     {
+                <button type="button" class="btn btn-outline-info" @onclick="NavigateBackClick">&lt; Go Back</button>
         if (WindowId == 0 || WindowId == null)
         {
             <h2>All SubElements</h2>
@@ -235,5 +233,9 @@
     private async Task CloseTaskModal()
     {
         await jsRuntime.InvokeAsync<object>("CloseModal", "myModal");
+    }
+    private void NavigateBackClick()
+    {
+        Navigation.NavigateBack();
     }
 }

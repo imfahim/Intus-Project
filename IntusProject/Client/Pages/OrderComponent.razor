@@ -1,18 +1,17 @@
 ﻿@page "/orders"
 @inject NavigationManager NavigationManager
 @using IntusProject.Shared
+@using IntusProject.Shared.ViewModel
+@inject IJSRuntime jsRuntime
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
 @inject StateService.PageHistoryState PageHistoryState;
+@inject Navigation Navigation
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>Order List</PageTitle>
 
 <div class="container">
-    @if (PageHistoryState.CanGoBack())
-    {
-        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
-    }
     <PageTitle>Order List</PageTitle>
     @if (orders == null)
     {
@@ -20,7 +19,16 @@
     }
     else
     {
-        <table class="table table-bordered table-striped">
+                <button type="button" class="btn btn-outline-info" @onclick="NavigateBackClick">&lt; Go Back</button>
+        <div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Window" @onclick="(() => InitializeModalobject())">Add Window</button>
+            <div class="pull-right">
+                <button type="button" hidden="@(!State)" class="btn btn-info" value="Save" @onclick="(() => SaveStateToDB())">Save State</button>
+                <button type="button" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
+
+            </div>
+        </div>
+                <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Order Id</th>
@@ -36,19 +44,64 @@
                         <td>@order.Name</td>
                         <td>@order.State</td>
                         <td>
+                            @if (order.Id != 0)
+                            {
                             <input type="button" @onclick="@(()=>SelectedOrder(order.Id))" value="Windows" />
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger" value="Remove" @onclick="(() => RemoveObject(order))">Remove</button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     }
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Window Detail</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <EditForm Model="@OrderObject" OnValidSubmit="@HandleValidSubmit">
+
+                    <div class="modal-body">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <input type="hidden" @bind-value="@OrderObject.Id" />
+                        <div class="form-group">
+                            <label for="Name">Name</label>
+                            <InputText id="Name" class="form-control" @bind-Value="@OrderObject.Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="State">State</label>
+                            <InputText id="State" class="form-control" @bind-Value="@OrderObject.State" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </EditForm>
+
+
+            </div>
+
+        </div>
+    </div>
+
 </div>
 
 @code {
     private List<Order> orders;
+    public OrderVM OrderObject { get; set; } = new OrderVM();
     private const string windowPage = "windows";
     private string currentPage;
+        private bool State;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,7 +121,66 @@
         PageHistoryState.AddPageToHistory($"/orders");
         base.OnInitialized();
     }
-
+    public void RemoveObject(Order element)
+    {
+        orders.RemoveAll(x => x.Id == element.Id);
+        stateService.SetValue(currentPage, orders);
+        stateService.SetPageState(currentPage, true);
+        State = stateService.GetPageState(currentPage);
+        stateService.OnStateChange -= StateHasChanged;
+    }
+    public async void RefreshState()
+    {
+            var newData = await Http.GetFromJsonAsync<List<Order>>("Order");
+        orders = newData == null ? new List<Order>() : newData;
+        stateService.SetValue(currentPage, orders);
+        stateService.SetPageState(currentPage, false);
+        State = stateService.GetPageState(currentPage);
+        stateService.OnStateChange -= StateHasChanged;
+        StateHasChanged();
+    }
+    public async void SaveStateToDB()
+    {
+        var stateData = stateService.GetValue(currentPage);
+        orders = (List<Order>)stateData;
+        var response = await Http.PostAsJsonAsync<List<Order>>($"Order", orders);
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            RefreshState();
+        }
+        else
+        {
+            await jsRuntime.InvokeVoidAsync("alert", "Error making http request");
+        }
+    }
+    private async void HandleValidSubmit()
+    {
+        if (OrderObject.Id == 0)
+        {
+            var newObj = new Order()
+                {
+                    Id = OrderObject.Id,
+                    Name = OrderObject.Name,
+                    State = OrderObject.State,
+                    CreatedOn = DateTime.UtcNow,
+                    Windows = new List<Window>()
+                };
+            orders.Add(newObj);
+            stateService.SetValue(currentPage, orders);
+            stateService.SetPageState(currentPage, true);
+            State = stateService.GetPageState(currentPage);
+            stateService.OnStateChange += StateHasChanged;
+        }
+        await CloseTaskModal();
+    }
+    private async Task InitializeModalobject()
+    {
+        OrderObject = new OrderVM();
+    }
+    private async Task CloseTaskModal()
+    {
+        await jsRuntime.InvokeAsync<object>("CloseModal", "myModal");
+    }
     void SelectedOrder(int orderId)
     {
         uriHelper.NavigateTo($"/{windowPage}/{orderId}");
@@ -76,6 +188,10 @@
     public void Dispose()
     {
         stateService.OnStateChange -= StateHasChanged;
+    }
+    private void NavigateBackClick()
+    {
+        Navigation.NavigateBack();
     }
     //@attribute [Microsoft.AspNetCore.Components.RouteAttribute(PageName)]
 

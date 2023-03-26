@@ -10,4 +10,5 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<StateContainerService>();
 builder.Services.AddSingleton<PageHistoryState>();
+builder.Services.AddSingleton<Navigation>();
 await builder.Build().RunAsync();

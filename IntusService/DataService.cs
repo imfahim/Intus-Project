@@ -56,6 +56,31 @@ namespace IntusService
                 await _repo.DeleteWindow(win.Id);
             }
         }
+        public async Task SaveOrdersState(IList<OrderDTO> postData, int windowId)
+        {
+            var newAdded = postData.Where(x => x.Id == 0).ToList();
+            var allOreders = await GetAllOrders();
+            var deleted = allOreders.Where(x => !postData.Select(x => x.Id).Contains(x.Id)).ToList();
+
+            foreach (var ord in newAdded)
+            {
+                await _repo.AddOrder(_mapper.Map<Order>(ord));
+            }
+            foreach (var ord in deleted)
+            {
+                var windows = await GetWindowsByOrderId(ord.Id);
+                foreach (var win in windows)
+                {
+                    var subElements = await GetSubElementsByWindowId(win.Id);
+                    foreach (var sub in subElements)
+                    {
+                        await _repo.DeleteSubElements(sub.Id);
+                    }
+                    await _repo.DeleteWindow(win.Id)
+               }
+                await _repo.DeleteOrder(ord.Id);
+            }
+        }
 
         public async Task<List<WindowDTO>> GetAllWindows()
         {

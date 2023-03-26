@@ -6,15 +6,12 @@
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
 @inject StateService.PageHistoryState PageHistoryState;
+@inject Navigation Navigation
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>Window List</PageTitle>
 
 <div class="container">
-    @if (PageHistoryState.CanGoBack())
-    {
-        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
-    }
     <PageTitle>Window List</PageTitle>
     @if (windows == null)
     {
@@ -22,6 +19,7 @@
     }
     else
     {
+        <button type="button" class="btn btn-outline-info" @onclick="NavigateBackClick">&lt; Go Back</button>
         if (OrderId == 0 || OrderId == null)
         {
             <h2>All Windows</h2>
@@ -86,16 +84,16 @@
                         <ValidationSummary />
                         <input type="hidden" @bind-value="@WindowObject.Id" />
                         <div class="form-group">
-                            <label for="Element">Window</label>
+                            <label for="Element">Order</label>
                             <input type="number" class="form-control" value="@OrderId" readonly>
                         </div>
                         <div class="form-group">
-                            <label for="Type">Type</label>
-                            <InputText id="Type" class="form-control" @bind-Value="@WindowObject.Name" />
+                            <label for="Name">Name</label>
+                            <InputText id="Name" class="form-control" @bind-Value="@WindowObject.Name" />
                         </div>
                         <div class="form-group">
-                            <label for="Width">Width</label>
-                            <InputNumber id="Width" class="form-control" @bind-Value="@WindowObject.QuantityOfWindows" />
+                            <label for="QuantityOfWindows">QuantityOfWindows</label>
+                            <InputNumber id="QuantityOfWindows" class="form-control" @bind-Value="@WindowObject.QuantityOfWindows" />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -193,7 +191,8 @@
                     OrderId = OrderId == null ? 0 : OrderId.Value,
                     Name = WindowObject.Name,
                     QuantityOfWindows = WindowObject.QuantityOfWindows,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedOn = DateTime.UtcNow,
+                    SubElements = new List<SubElement>()
                 };
             windows.Add(newObj);
             stateService.SetValue(currentPage, windows);
@@ -221,5 +220,9 @@
     {
         stateService.OnStateChange -= StateHasChanged;
 
+    }
+    private void NavigateBackClick()
+    {
+        Navigation.NavigateBack();
     }
 }

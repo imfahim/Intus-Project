@@ -14,5 +14,6 @@ namespace IntusService
         Task<List<SubElementDTO>> GetSubElementsByWindowId(int windowId);
         Task SaveSubElementsState(IList<SubElementDTO> postData, int windowId);
         Task SaveWindowsState(IList<WindowDTO> postData, int windowId);
+        Task SaveOrdersState(IList<OrderDTO> postData, int windowId);
     }
 }
