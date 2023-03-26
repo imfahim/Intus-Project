@@ -76,7 +76,7 @@ namespace IntusService
                     {
                         await _repo.DeleteSubElements(sub.Id);
                     }
-                    await _repo.DeleteWindow(win.Id)
+                    await _repo.DeleteWindow(win.Id);
                }
                 await _repo.DeleteOrder(ord.Id);
             }

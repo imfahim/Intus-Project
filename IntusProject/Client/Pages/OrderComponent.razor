@@ -21,7 +21,7 @@
     {
                 <button type="button" class="btn btn-outline-info" @onclick="NavigateBackClick">&lt; Go Back</button>
         <div>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Window" @onclick="(() => InitializeModalobject())">Add Window</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Order" @onclick="(() => InitializeModalobject())">Add Window</button>
             <div class="pull-right">
                 <button type="button" hidden="@(!State)" class="btn btn-info" value="Save" @onclick="(() => SaveStateToDB())">Save State</button>
                 <button type="button" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
@@ -64,7 +64,7 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Window Detail</h4>
+                    <h4 class="modal-title">Order Detail</h4>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <EditForm Model="@OrderObject" OnValidSubmit="@HandleValidSubmit">
