@@ -7,7 +7,7 @@ namespace IntusProject.Shared.ViewModel
         public int Id { get; set; }
         [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; }
-        [Required(ErrorMessage = "Name is required")]
+        [Required(ErrorMessage = "State is required")]
         public string State { get; set; }
     }
 }

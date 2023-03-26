@@ -21,7 +21,7 @@
     {
                 <button type="button" class="btn btn-outline-info" @onclick="NavigateBackClick">&lt; Go Back</button>
         <div>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Order" @onclick="(() => InitializeModalobject())">Add Window</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Order" @onclick="(() => InitializeModalobject())">Add Order</button>
             <div class="pull-right">
                 <button type="button" hidden="@(!State)" class="btn btn-info" value="Save" @onclick="(() => SaveStateToDB())">Save State</button>
                 <button type="button" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
