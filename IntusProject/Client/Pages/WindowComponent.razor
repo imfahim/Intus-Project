@@ -1,14 +1,20 @@
 ﻿@page "/windows/{OrderId:int}"
-@page "/windows"
 @using IntusProject.Shared
+@using IntusProject.Shared.ViewModel
+@inject IJSRuntime jsRuntime
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
+@inject StateService.PageHistoryState PageHistoryState;
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>Window List</PageTitle>
 
 <div class="container">
+    @if (PageHistoryState.CanGoBack())
+    {
+        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
+    }
     <PageTitle>Window List</PageTitle>
     @if (windows == null)
     {
@@ -24,6 +30,14 @@
         {
             <h2>Windows List for Order Id: @OrderId</h2>
         }
+        <div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add Window" @onclick="(() => InitializeModalobject())">Add Window</button>
+            <div class="pull-right">
+                <button type="button" hidden="@(!State)" class="btn btn-info" value="Save" @onclick="(() => SaveStateToDB())">Save State</button>
+                <button type="button" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
+
+            </div>
+        </div>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -42,14 +56,59 @@
                         <td>@win.QuantityOfWindows</td>
                         <td>@win.SubElements.Count</td>
                         <td>
-                            <input type="button" @onclick="@(()=>SelectedWindow(win.Id))" value="Sub Elements" />
+                            @if (win.Id != 0)
+                            {
+                                <input type="button" @onclick="@(()=>SelectedWindow(win.Id))" value="Sub Elements" />
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger" value="Remove" @onclick="(() => RemoveObject(win))">Remove</button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     }
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
 
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Window Detail</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <EditForm Model="@WindowObject" OnValidSubmit="@HandleValidSubmit">
+
+                    <div class="modal-body">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <input type="hidden" @bind-value="@WindowObject.Id" />
+                        <div class="form-group">
+                            <label for="Element">Window</label>
+                            <input type="number" class="form-control" value="@OrderId" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="Type">Type</label>
+                            <InputText id="Type" class="form-control" @bind-Value="@WindowObject.Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Width">Width</label>
+                            <InputNumber id="Width" class="form-control" @bind-Value="@WindowObject.QuantityOfWindows" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </EditForm>
+
+
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
@@ -57,16 +116,19 @@
 @code {
     [Parameter]
     public int? OrderId { get; set; } = 0;
+    public WindowVM WindowObject { get; set; } = new WindowVM();
 
     private List<Window> windows;
     private const string subElementPage = "subElements";
     private string currentPage;
+    private bool State;
 
     protected override async Task OnInitializedAsync()
     {
 
         currentPage = NavigationManager.Uri;
         var stateData = stateService.GetValue(currentPage);
+        State = stateService.GetPageState(currentPage);
         if (stateData == null)
         {
             if (OrderId != 0 && OrderId != null)
@@ -86,8 +148,69 @@
         {
             windows = (List<Window>)stateData;
         }
+        PageHistoryState.AddPageToHistory($"/windows/{OrderId}");
+        base.OnInitialized();
     }
-
+    public void RemoveObject(Window element)
+    {
+        windows.RemoveAll(x => x.Id == element.Id);
+        stateService.SetValue(currentPage, windows);
+        stateService.SetPageState(currentPage, true);
+        State = stateService.GetPageState(currentPage);
+        stateService.OnStateChange -= StateHasChanged;
+    }
+    public async void RefreshState()
+    {
+        var newData = await Http.GetFromJsonAsync<List<Window>>($"window/order/{OrderId}");
+        windows = newData == null ? new List<Window>() : newData;
+        stateService.SetValue(currentPage, windows);
+        stateService.SetPageState(currentPage, false);
+        State = stateService.GetPageState(currentPage);
+        stateService.OnStateChange -= StateHasChanged;
+        StateHasChanged();
+    }
+    public async void SaveStateToDB()
+    {
+        var stateData = stateService.GetValue(currentPage);
+        windows = (List<Window>)stateData;
+        var response = await Http.PostAsJsonAsync<List<Window>>($"window/order/{OrderId}", windows);
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            RefreshState();
+        }
+        else
+        {
+            await jsRuntime.InvokeVoidAsync("alert", "Error making http request");
+        }
+    }
+    private async void HandleValidSubmit()
+    {
+        if (WindowObject.Id == 0)
+        {
+            var newObj = new Window()
+                {
+                    Id = WindowObject.Id,
+                    OrderId = OrderId == null ? 0 : OrderId.Value,
+                    Name = WindowObject.Name,
+                    QuantityOfWindows = WindowObject.QuantityOfWindows,
+                    CreatedOn = DateTime.UtcNow
+                };
+            windows.Add(newObj);
+            stateService.SetValue(currentPage, windows);
+            stateService.SetPageState(currentPage, true);
+            State = stateService.GetPageState(currentPage);
+            stateService.OnStateChange += StateHasChanged;
+        }
+        await CloseTaskModal();
+    }
+    private async Task InitializeModalobject()
+    {
+        WindowObject = new WindowVM();
+    }
+    private async Task CloseTaskModal()
+    {
+        await jsRuntime.InvokeAsync<object>("CloseModal", "myModal");
+    }
     void SelectedWindow(int windowId)
     {
         //stateService.SetValue(subElementPage, windowId);

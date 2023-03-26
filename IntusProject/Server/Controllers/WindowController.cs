@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using IntusProject.Shared;
 using IntusService;
+using IntusService.ServiceModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IntusProject.Server.Controllers
@@ -27,7 +28,12 @@ namespace IntusProject.Server.Controllers
             var data = await _dataService.GetAllWindows();
             return _mapper.Map<List<Window>>(data);
         }
-
+        [Route("order/{orderId}")]
+        [HttpPost]
+        public async Task SaveState([FromBody] IList<Window> postData, int orderId)
+        {
+            await _dataService.SaveWindowsState(_mapper.Map<List<WindowDTO>>(postData), orderId);
+        }
         [Route("{windowId}")]
         [HttpGet]
         public async Task<Window> GetWindowById(int windowId)

@@ -3,11 +3,16 @@
 @using IntusProject.Shared
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
+@inject StateService.PageHistoryState PageHistoryState;
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>Order List</PageTitle>
 
 <div class="container">
+    @if (PageHistoryState.CanGoBack())
+    {
+        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
+    }
     <PageTitle>Order List</PageTitle>
     @if (orders == null)
     {
@@ -60,6 +65,8 @@
         {
             orders = (List<Order>)stateData;
         }
+        PageHistoryState.AddPageToHistory($"/orders");
+        base.OnInitialized();
     }
 
     void SelectedOrder(int orderId)

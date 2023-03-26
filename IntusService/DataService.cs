@@ -36,6 +36,27 @@ namespace IntusService
                 await _repo.DeleteSubElements(sub.Id);
             }
         }
+        public async Task SaveWindowsState(IList<WindowDTO> postData, int windowId)
+        {
+            var newAdded = postData.Where(x => x.Id == 0).ToList();
+            var allWindows = await GetWindowsByOrderId(windowId);
+            var deleted = allWindows.Where(x => !postData.Select(x => x.Id).Contains(x.Id)).ToList();
+
+            foreach (var win in newAdded)
+            {
+                await _repo.AddWindow(_mapper.Map<Window>(win));
+            }
+            foreach (var win in deleted)
+            {
+                var subElements = await GetSubElementsByWindowId(win.Id);
+                foreach (var sub in subElements)
+                {
+                    await _repo.DeleteSubElements(sub.Id);
+                }
+                await _repo.DeleteWindow(win.Id);
+            }
+        }
+
         public async Task<List<WindowDTO>> GetAllWindows()
         {
             var data = await _repo.GetAllWindows();
@@ -50,10 +71,17 @@ namespace IntusService
         }
         public async Task<List<WindowDTO>> GetWindowsByOrderId(int orderId)
         {
-            var data = await _repo.GetOrderById(orderId);
-            if (data == null) throw new Exception("Not Found");
-            if(data.Windows == null) return new List<WindowDTO>();
-            return _mapper.Map<List<WindowDTO>>(data.Windows);
+            var data = await _repo.GetWindowsByOrderId(orderId);
+            if(data == null) return new List<WindowDTO>();
+            try
+            {
+                var asd = _mapper.Map<List<WindowDTO>>(data);
+            }
+            catch(Exception ex)
+            {
+
+            }
+            return _mapper.Map<List<WindowDTO>>(data);
         }
         public async Task<SubElementDTO> GetSubElementsById(int id)
         {
@@ -63,10 +91,9 @@ namespace IntusService
         }
         public async Task<List<SubElementDTO>> GetSubElementsByWindowId(int windowId)
         {
-            var data = await _repo.GetWindowsById(windowId);
-            if (data == null) throw new Exception("Not Found");
-            if (data.SubElements == null) return new List<SubElementDTO>();
-            return _mapper.Map<List<SubElementDTO>>(data.SubElements);
+            var data = await _repo.GetSubElementsByWindow(windowId);
+            if (data == null) return new List<SubElementDTO>();
+            return _mapper.Map<List<SubElementDTO>>(data);
         }
         public async Task<List<OrderDTO>> GetAllOrders()
         {

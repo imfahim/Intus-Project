@@ -1,17 +1,20 @@
 ﻿@page "/subElements/{WindowId:int}"
-@page "/subElements"
 @using IntusProject.Shared
 @using IntusProject.Shared.ViewModel
 @inject IJSRuntime jsRuntime
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @inject StateService.StateContainerService stateService;
+@inject StateService.PageHistoryState PageHistoryState;
 @implements IDisposable
 @inject NavigationManager uriHelper;
 <PageTitle>SubElement List</PageTitle>
 
 <div class="container">
-
+    @if (PageHistoryState.CanGoBack())
+    {
+        <a href="@PageHistoryState.GetGoBackPage()">Go Back</a>
+    }
     <PageTitle>SubElement List</PageTitle>
     @if (subElements == null)
     {
@@ -31,7 +34,7 @@
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" value="Add SubElement" @onclick="(() => InitializeModalobject())">Add SubElement</button>
             <div class="pull-right">
                 <button type="button" hidden="@(!State)" class="btn btn-info" value="Save" @onclick="(() => SaveStateToDB())">Save State</button>
-                <button type="button" hidden="@(!State)" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
+                <button type="button" class="btn btn-danger" value="Refresh" @onclick="(() => RefreshState())">Refresh State</button>
 
             </div>
         </div>
@@ -70,8 +73,8 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">SubElement Detail</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <EditForm Model="@SubElementObject" OnValidSubmit="@HandleValidSubmit">
 
@@ -162,6 +165,8 @@
         {
             subElements = (List<SubElement>)stateData;
         }
+        PageHistoryState.AddPageToHistory($"/subElements/{WindowId}");
+        base.OnInitialized();
     }
 
     public void Dispose()

@@ -13,5 +13,6 @@ namespace IntusService
         Task<SubElementDTO> GetSubElementsById(int id);
         Task<List<SubElementDTO>> GetSubElementsByWindowId(int windowId);
         Task SaveSubElementsState(IList<SubElementDTO> postData, int windowId);
+        Task SaveWindowsState(IList<WindowDTO> postData, int windowId);
     }
 }

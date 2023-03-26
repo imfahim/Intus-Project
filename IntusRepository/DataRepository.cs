@@ -23,6 +23,11 @@ namespace IntusRepository
             var res = await _context.SubElements.AsNoTracking().FirstOrDefaultAsync(x=>x.Id == id);
             return res;
         }
+        public async Task<List<SubElement>> GetSubElementsByWindow(int id)
+        {
+            var res = await _context.SubElements.AsNoTracking().Where(x => x.WindowId == id).ToListAsync();
+            return res;
+        }
         public async Task<SubElement> AddSubElements(SubElement data)
         {
             _context.SubElements.Add(data);
@@ -67,6 +72,12 @@ namespace IntusRepository
             var res = await _context.Windows.AsNoTracking().Include(x=>x.SubElements).FirstOrDefaultAsync(x => x.Id == id);
             return res;
         }
+        public async Task<List<Window>> GetWindowsByOrderId(int id)
+        {
+            var res = await _context.Windows.AsNoTracking().Include(x=>x.SubElements).Where(x => x.OrderId == id).ToListAsync();
+            return res;
+        }
+
         public async Task<Window> AddWindow(Window data)
         {
             _context.Windows.Add(data);
